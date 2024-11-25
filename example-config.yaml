@@ -1,0 +1,12 @@
+target:
+  pod:
+    labelSelector: "app=auth-service, !job-name"
+    container: service
+    namespace: backend
+forwards:
+  - name: "posgresql"
+    sourceAddr: ":5432"
+    targetAddr: "{{.POSTGRES_HOST}}:{{.POSTGRES_PORT}}"
+  - name: "redis"
+    sourceAddr: ":6379"
+    targetAddr: "{{.REDIS_HOST}}:{{.REDIS_PORT}}"
