@@ -1,0 +1,30 @@
+name: Release Go Binary (Docker Build)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx (optional but recommended)
+      uses: docker/setup-buildx-action@v3
+
+    - name: Run Makefile build
+      run: |
+        make build-macos
+        make build-linux
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          build/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
