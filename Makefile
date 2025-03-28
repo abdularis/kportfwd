@@ -8,11 +8,11 @@ MOD_NAME:=github.com/abdularis/kportfwd
 .PHONY: build
 
 build-forwarder-agent-go-linux:
-	docker run --rm -it -v ./:/project -w /project\
+	docker run --rm -v ./:/project -w /project\
 		-e GOOS=linux\
 		-e GOARCH=amd64\
 		$(GO_IMG) go build -ldflags "-w -s" -gcflags="all=-l" -o internal/config/build/forwarder-agent-linux-amd64 $(MOD_NAME)/cmd/forwarder-agent
-	docker run --rm -it -v ./:/project -w /project\
+	docker run --rm -v ./:/project -w /project\
 		alpine:3.18 sh -c "apk add upx && upx --best --ultra-brute internal/config/build/forwarder-agent-linux-amd64"
 	cd internal/config/build && md5sum forwarder-agent-linux-amd64 > forwarder-agent-linux-amd64.md5sum
 
@@ -23,13 +23,14 @@ build-linux:
 	@make build GOOS=linux GOARCH=amd64
 
 build:
-	docker run --rm -it -v ./:/project -w /project \
+	docker run --rm -v ./:/project -w /project \
 		-v $(_GOCACHE):/var/caches \
 		-v $(_GOPATH):/opt/go \
 		-e GOCACHE=/var/caches \
 		-e GOPATH=/opt/go \
 		-e GOOS=$(GOOS) \
 		-e GOARCH=$(GOARCH) \
+		-e GOFLAGS="-buildvcs=false" \
 		$(GO_IMG) go build -ldflags "-w -s" -gcflags="all=-l" -o build/$(APP_NAME)-$(GOOS)-$(GOARCH) $(MOD_NAME)/cmd/portfwd
 
 install:

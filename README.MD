@@ -12,6 +12,10 @@ Download latest binary from [Release Page](https://github.com/abdularis/kportfwd
 
 ## Usage
 
+**Requirements:**
+- `kportfwd` requires `kubectl` cli to be installed and configured (it will use current selected cluster).
+
+
 Run help for more details
 
 ```bash
