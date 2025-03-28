@@ -82,12 +82,12 @@ func portForwardAll(ctx context.Context, k8sClient *k8s.ClientConfig, ns, target
 			if cfg.LocalAddrParsed.Hostname() != "127.0.0.1" {
 				// add the address to the hosts file
 				if err := ifconfig.AddLoopbackAlias(cfg.LocalAddrParsed.Hostname()); err != nil {
-					log.Printf("unable to add loopback addr alias %s: %s", cfg.LocalAddrParsed.Hostname(), err)
+					log.Errorf("unable to add loopback addr alias %s: %s", cfg.LocalAddrParsed.Hostname(), err)
 					return
 				}
 				defer func() {
 					if err := ifconfig.RemoveLoopbackAlias(cfg.LocalAddrParsed.Hostname()); err != nil {
-						log.Printf("unable to remove loopback addr alias %s: %s", cfg.LocalAddrParsed.Hostname(), err)
+						log.Errorf("unable to remove loopback addr alias %s: %s", cfg.LocalAddrParsed.Hostname(), err)
 						return
 					}
 				}()

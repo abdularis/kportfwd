@@ -12,16 +12,21 @@ Download latest binary from [Release Page](https://github.com/abdularis/kportfwd
 
 ## Usage
 
+**Requirements:**
+- `kportfwd` requires `kubectl` cli to be installed and configured (it will use current selected cluster).
+
+
 Run help for more details
 
 ```bash
 kportfwd --help
 ```
 
-Run with specified configuration file
+Run with specified configuration file,
+use `sudo` to allows updating `/etc/hosts` file making internal domain name available on local host or when you're using custom IP in local address config (uses `ifconfig`).
 
 ```
-kportfwd port-forward --config /path/to/config.yaml
+sudo kportfwd port-forward --config /path/to/config.yaml
 ```
 
 ## Config YAML Example
@@ -38,7 +43,7 @@ forwards:
     sourceAddr: ":50001" # (optional) forwarder agent will decide random ports if not provided
     targetAddr: "{{REDIS_HOST}}:{{REDIS_PORT}}" # this uses go template syntax, you can extract value from environment variable inside target pod
   - name: "postgres"
-    localAddr: "192.168.0.126:5432" # this will create loopback address alias for specified ip address
+    localAddr: "192.168.0.126:5432" # this will create loopback address alias for specified ip address (need sudo permission)
     targetAddr: "internal.postgresql:5432"
 ```
 
