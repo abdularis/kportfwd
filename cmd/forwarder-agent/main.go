@@ -19,6 +19,13 @@ import (
 
 const processTimeoutDuration = time.Second * 30
 
+// forwarder-agent cli is a program that will run inside target pod container
+// and will start port forwarding to target address and expose them to different local ports
+// so that it will be forwardable to developer local machine using kubectl on said target pod.
+//
+// This program will also expose http ping endpoint that should be called by local machine (kportfwd)
+// to indicate that this agent is being used otherwise this program will exit and clean up
+// if no ping for 30 seconds period time (configured from processTimeoutDuration).
 func main() {
 	log.SetComponentName("forwarder-agent")
 

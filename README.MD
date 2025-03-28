@@ -1,31 +1,14 @@
-# Local Service Development For Kubernetes
+# kportfwd - K8S Port Forwarding Tools
 
-kportfwd
+Simple tools to port forward internal service and any domain name accessible inside kubernetes cluster and requires no setup on the cluster.
 
-Used in condition where we don't have deployed vpn inside cluster for local development or other
-tools for helping local development for kubernetes services.
+Example use case would be if you're using AWS RDS often times the database address is a domain name accessible only inside Kubernetes (EKS) cluster, this tool can help bridging the port forward.
 
-No setup on cluster and doesn't leave any residual.
+If you're deploying VPN on cluster address making internal domain name seamlessly available on local machine, you're not gonna need this tool.
 
 ## Install
 
-### Build
-
-You'll need `docker` to build the binary from source code.
-
-Build for specific OS platform
-
-```
-make build-macos
-# or
-make build-linux
-```
-
-To install the binary on Go path directory
-
-```
-make install-macos
-```
+Download latest binary from [Release Page](https://github.com/abdularis/kportfwd/releases)
 
 ## Usage
 
@@ -35,59 +18,51 @@ Run help for more details
 kportfwd --help
 ```
 
-```
+Run with specified configuration file
 
 ```
+kportfwd port-forward --config /path/to/config.yaml
+```
 
-## Config YAML References
-
-
+## Config YAML Example
 
 ```yaml
 target:
   pod:
-    labelSelector: "app=backend,!job-name"
-    container: service
-    namespace: default
+    labelSelector: "app=backend,!job-name" # find pod with give kubectl label selector
+    container: service # container name on which the forwarder-agent will be deployed
+    namespace: default # specifiy which namespace to find the target pod
 forwards:
   - name: ""
     localAddr: "localhost:8000"
-    sourceAddr: ""
-    targetAddr: "{{REDIS_HOST}}:{{REDIS_PORT}}"
+    sourceAddr: ":50001" # (optional) forwarder agent will decide random ports if not provided
+    targetAddr: "{{REDIS_HOST}}:{{REDIS_PORT}}" # this uses go template syntax, you can extract value from environment variable inside target pod
+  - name: "postgres"
+    localAddr: "192.168.0.126:5432" # this will create loopback address alias for specified ip address
+    targetAddr: "internal.postgresql:5432"
 ```
 
-## Relay Agent
+## Port Forwarding Process
 
-Relay Agent: Is a program running inside target pod container to relay network traffic to any domain accessible from that container and exposed them into different ports so that is forwardable by `kubectl` outside cluster.
+![](port-forwarding-process.jpg)
 
-### Relay Agent Controller API Spec
 
-This APIs is used to communicate with the relay agent on target pod.
+## Build From Source
 
-API hosted on port: 8181
+Require `make` and `docker` to build the binary.
 
-#### GET /ping
+Build for specific OS platform
 
-Should be called periodically to indicate there is a client using it, otherwise relay-agent will exit automatically.
-
-Response
-
-```text
-pong
+```
+make build-macos
+# or
+make build-linux
 ```
 
-#### GET /relays
+Install the binary on Go path directory
 
-Response:
-
-```json
-{
-    "relays": [
-        {
-            "sourceAddr": "",
-            "targetAddr": "",
-            "errorMsg": ""
-        }
-    ]
-}
 ```
+make install-macos
+```
+
+> make sure the Go path binary directory is in you PATH
