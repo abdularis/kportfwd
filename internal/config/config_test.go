@@ -101,7 +101,7 @@ func Test_ProcessConfigTemplateString(t *testing.T) {
 					},
 				},
 			}
-			err := ProcessConfigTemplateString(&cfg, tc.Envs)
+			err := ParseConfigAddresses(&cfg, tc.Envs)
 
 			if tc.ExpectedErr {
 				assert.Errorf(t, err, "expect an error occur but not for %s", tc.TargetAddr)

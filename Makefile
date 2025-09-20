@@ -24,9 +24,7 @@ build-linux:
 
 build:
 	docker run --rm -v ./:/project -w /project \
-		-v $(_GOCACHE):/var/caches \
 		-v $(_GOPATH):/opt/go \
-		-e GOCACHE=/var/caches \
 		-e GOPATH=/opt/go \
 		-e GOOS=$(GOOS) \
 		-e GOARCH=$(GOARCH) \

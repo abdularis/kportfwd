@@ -1,0 +1,8 @@
+target:
+  pod:
+    labelSelector: "app=auth-service, !job-name"
+    container: service
+    namespace: backend
+forwards:
+  - targetAddr: "postgresql17.postgresql.svc.cluster.local:5432"
+  - targetAddr: "redis-cluster.default.svc.cluster.local:6379"

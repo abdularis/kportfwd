@@ -94,14 +94,25 @@ func portForwardAll(ctx context.Context, k8sClient *k8s.ClientConfig, ns, target
 			}
 
 			etchosts.AddHost(cfg.LocalAddrParsed.Hostname(), rc.TargetAddrParsed.Hostname())
-			err := k8s.PortForward(ctx, k8sClient, nil, ns, targetPod, cfg.LocalAddrParsed.Hostname(), cfg.LocalAddrParsed.Port(), cfg.SourceAddrParsed.Port(), false)
+
+			forwarderReadyCh := make(chan struct{})
+			defer close(forwarderReadyCh)
+
+			go func() {
+				<-forwarderReadyCh
+				log.Printf("forwarder ready: %s -> %s -> %s",
+					cfg.LocalAddrParsed.Host, cfg.SourceAddrParsed.Host, cfg.TargetAddrParsed.Host)
+			}()
+
+			err := k8s.PortForward(ctx, k8sClient, forwarderReadyCh, ns, targetPod, cfg.LocalAddrParsed.Hostname(), cfg.LocalAddrParsed.Port(), cfg.SourceAddrParsed.Port(), true)
 			if err != nil {
-				log.Printf("port forwarding %s: %s", cfg.Name, err)
+				log.Printf("port forwarding %s: %s", cfg.TargetAddr, err)
 			}
 		}(rc)
 	}
 
-	log.Printf("forwarding all ports from relay configs...")
+	log.Printf("forwarding target to local addresses...")
+
 	wg.Wait()
 }
 

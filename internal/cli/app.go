@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/abdularis/kportfwd/internal/config"
 	"github.com/abdularis/kportfwd/internal/k8s"
 	"github.com/abdularis/kportfwd/internal/log"
@@ -18,28 +20,28 @@ var (
 	FlagConfigFile = &cli.StringFlag{
 		Name:     flagNameConfigFile,
 		Required: true,
-		Usage:    "Path to config yaml file (see README.md for more info)",
+		Usage:    "Path to YAML configuration file",
 	}
 
 	FlagForwarderAgentScript = &cli.StringFlag{
 		Name:  flagNameForwarderAgentScript,
 		Value: "",
-		Usage: "Path to forwarder agent binary file",
+		Usage: "Custom forwarder agent binary (optional)",
 	}
 
 	FlagSaveTargetEnvar = &cli.BoolFlag{
 		Name:  flagSaveTargetEnvarToFile,
 		Value: false,
-		Usage: "If specified will save target pod environment variables into file stored in .envs directory",
+		Usage: "Save target pod environment variables to .envs/ directory",
 	}
 )
 
 func GetCLIApp() *cli.App {
 	return &cli.App{
 		Name:        "kportfwd",
-		Version:     "0.0.1",
-		Usage:       "CLI tool to port forwards any domain names inside kubernetes cluster",
-		Description: "Port forwards services, pods, or any accessible domain names inside kubernetes cluster and make them available on local machine.\nRun this tool with sudo permission to allow modifying /etc/hosts file that make internal cluster domain name accessible in local host, this permission is also used to add IP address alias for localhost if you're using custom IP local address in configuration",
+		Version:     "0.0.2",
+		Usage:       "Port forward internal Kubernetes services to your local machine",
+		Description: "Forward cluster-internal services and domains to your local machine without any cluster setup.\n\nRequires sudo to modify /etc/hosts and create network aliases for transparent access.",
 		Flags: []cli.Flag{
 			FlagConfigFile,
 			FlagForwarderAgentScript,
@@ -66,12 +68,21 @@ func handleActionPortForward(c *cli.Context) error {
 	log.Printf("find target pod on cluster: %s", k8sClient.Context)
 
 	saveTargetEnvarToFile := c.Bool(flagSaveTargetEnvarToFile)
-	target, err := FindTargetPod(c.Context, cfg, k8sClient, true, saveTargetEnvarToFile)
+	target, err := FindTargetPod(c.Context, cfg, k8sClient)
 	if err != nil {
 		return err
 	}
 
 	log.Printf("found target pod: %s", target.Pod)
+
+	envvars, err := GetTargetPodEnvars(c.Context, k8sClient, target.Namespace, target.Pod, target.Container, saveTargetEnvarToFile)
+	if err != nil {
+		return fmt.Errorf("unable to get environment variables from target pod: %w", err)
+	}
+
+	if err := config.ParseConfigAddresses(cfg, envvars); err != nil {
+		return fmt.Errorf("unable to render environment variables to config: %w", err)
+	}
 
 	PortForwardFromConfig(c.Context, cfg, k8sClient, target)
 
