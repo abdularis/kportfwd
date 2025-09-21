@@ -34,15 +34,24 @@ See the [Build from Source](#-build-from-source) section below.
 kportfwd --help
 ```
 
+You can use kportfwd in two ways: with a **configuration file** or with **command line options**.
+
 **Run with a configuration file:**
 ```bash
 kportfwd --config /path/to/config.yaml
+```
+
+**Run with command line options (no config file needed):**
+```bash
+# port forward multiple address (comma separated)
+kportfwd -t pod/app=backend -n default -c service -f "postgres:5432,rabbitmq:5672,{{.REDIS_HOST}}:{{.REDIS_PORT}}"
 ```
 
 **Run with elevated permissions (recommended):**
 ```bash
 sudo kportfwd --config /path/to/config.yaml
 ```
+
 
 > **💡 Why sudo?** 
 > - Updates `/etc/hosts` so you can access internal services by name
